@@ -1,0 +1,43 @@
+--This is from a dataset which contains records of 50,235 immigrants in Neatherlands with data on results 3 different language tests 
+--(speaking, morphological and lexicon).
+--As well as their background information (country of origin, sex, first and second languages etc.)
+
+select * from Language_scores..stex$;
+
+--List of first languages ordered by number of speakers.
+
+select 
+  (Language1) as first_language, 
+  sex, 
+  count(*) as Number,
+  sum(count(*)) over (partition by Language1) as total_number_per_language
+from Language_scores..stex$
+group by (Language1), sex
+order by first_language asc;
+
+--List of countries and total number of people who came from that country.
+
+select 
+  Country, 
+  sex, 
+  count(*) as total_no_people,
+  sum(count(*)) over (partition by Language1) as total_per_language
+from Language_scores..stex$
+group by Country, Sex
+order by Country;
+
+--Calculating average scores of participants from Germany specifically
+
+--CTE selecting data filtered for Germany.
+with Germany as
+  (select * 
+  from Language_scores..stex$
+  where country = 'Germany')
+
+--Using CTE to calculate average.
+select 
+  country,
+  AVG([Speaking test score]) as avg_speaking_score,
+  AVG(CAST([lexicon score] as DECIMAL(9,2))) as avg_lexicon_score
+from Germany
+group by country;
