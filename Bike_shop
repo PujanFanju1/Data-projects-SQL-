@@ -1,0 +1,43 @@
+--Data on the sales of a bike company. Fields are pulled in from 9 different tables into a single table designed to make data visualisations on 
+--Tableau easier to carry out.
+
+--Selecting all relevent columns and carrying out useful calculations.
+select 
+	orders.order_id, 
+	concat(customers.first_name,' ',customers.last_name) as full_name, 
+	customers.city, 
+	customers.state, 
+	orders.order_date,
+	sum(items.quantity) as 'Total Units',
+	sum(items.quantity*items.list_price) as 'revenue',
+	product_name,
+	categories.category_name,
+	store_name,
+	concat(staffs.first_name,' ',staffs.last_name) as staff_full_name
+
+--Joining all tables together using their relevent IDs.
+from sales.orders as orders
+left join sales.customers as customers
+on orders.customer_id = customers.customer_id
+left join sales.order_items as items
+on orders.order_id = items.order_id
+left join production.products as products
+on items.product_id = products.product_id
+left join production.categories as categories
+on products.category_id = categories.category_id
+left join sales.stores as stores
+on orders.store_id = stores.store_id
+left join sales.staffs as staffs
+on orders.staff_id = staffs.staff_id
+
+--Grouping by columns since aggregate functions (sum) has been carried out.
+group by 
+	orders.order_id, 
+	concat(customers.first_name,' ',customers.last_name),
+	customers.city,
+	customers.state,
+	orders.order_date,
+	product_name,
+	category_name,
+	store_name,
+	concat(staffs.first_name,' ',staffs.last_name)
