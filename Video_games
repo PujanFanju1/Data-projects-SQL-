@@ -1,0 +1,55 @@
+--All PS4 games with their overall and december sales. As well as their critic and user scores.
+
+select 
+	PS4.Game, 
+	Dec_sales.Platform,
+	PS4.Global_sales as overall_sales,
+	Dec_sales.Global_Sales as Dec_sales,
+	Dec_sales.Critic_Score,
+	Dec_Sales.User_score
+from
+Video_games..Video_Games_Sales_as_at_22_Dec_$ as Dec_sales
+inner join
+Video_games..PS4_GamesSales$ as PS4
+on Dec_sales.Name = PS4.Game
+where Platform = 'PS4'
+order by Critic_Score desc
+
+-----------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------
+--Finding the total sales and average rating scores of all games made by Ubisoft.
+
+--Create a CTE containing all data on games by Ubisoft.
+with ubisoft as 
+	(select
+		*
+	from Video_games..Video_Games_Sales_as_at_22_Dec_$
+	where Publisher = 'Ubisoft')
+
+--Use the CTE to then carry out calculations of total sales and average ratings across all platforms.
+select 
+	Name,
+	sum(count(*)) over (partition by Name) as number_of_platforms,
+	sum(Global_Sales) as total_sales,
+	avg(Critic_Score) as avg_critic_score,
+	avg(User_score) as avg_user_Score
+from ubisoft
+group by Name
+order by avg_critic_score desc
+
+----------------------------------------------------------------------------------------------------------------
+--Calculate the total units of games sold per platform by Ubisoft. This will help Ubisoft to identify the best
+--platforms to work closely with/invest in, in order to maximize revenue.
+with ubisoft as 
+	(select
+		*
+	from Video_games..Video_Games_Sales_as_at_22_Dec_$
+	where Publisher = 'Ubisoft')
+
+select
+	Platform,
+	sum(global_sales) as total_global_sales
+from ubisoft
+group by platform
+order by total_global_sales desc;
