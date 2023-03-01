@@ -1,0 +1,59 @@
+--Create CTE to find the best place that each country has achieved in all the years they've competed.
+
+with best as
+	(select 
+		country,
+		min(places) as best_place
+	from Eurovision..Countries_Editions_Songs$
+	where places is not null
+	group by country)
+
+--Join the CTE to the main table to extract the song performed for their best year and the artist of the song.
+select 
+	best.country as countries,
+	best.best_place as best_place,
+	songs,
+	artists
+from Eurovision..Countries_Editions_Songs$ as eu
+inner join best
+on eu.country = best.country
+and eu.places = best.best_place
+group by best.country,best_place,songs,artists;
+
+-----------------------------------------------------------------------------------------------------------------------
+--List of countries and the total number of votes they gained in each of the years they competed in Eurovision.
+select
+	country_name as country,
+	edition_year,
+	sum(value) as total_votes
+from Eurovision..Votes_From_Scoreboard$ as votes
+left join Eurovision..Countries$ as countries
+on votes.country_code_row = countries.country_code
+where country_name is not null
+group by edition_year,country_name
+order by country_name, edition_year asc;
+------------------------------------------------------------------------------------------------------------------------
+--How many votes each country got each year split by which countries voted for them.
+
+--First created a CTE to created rows of "voted countries". The "votes" table only contained the country code and not the country name, so it had to
+--be joined to the "countries table".
+with voted_countries as(
+	select
+		distinct(country_code_row),
+		country_name as voted_country
+	from Eurovision..Votes_From_Scoreboard$ as votes
+	left join Eurovision..Countries$ as countries
+	on votes.country_code_row = countries.country_code)
+
+--Select the year, the voting country, number of votes and the country they voted. Join to the "countries" table to get the name of the voting country.
+--Also join to the CTE "voted_countries" in order to get the name of the voted country.
+select
+	edition_year,
+	country_name as voting_country,
+	value as no_of_votes,
+	voted_country
+from Eurovision..Votes_From_Scoreboard$ as votes
+left join Eurovision..Countries$ as countries
+on votes.country_code_column = countries.country_code
+left join voted_countries
+on votes.country_code_row = voted_countries.country_code_row;
