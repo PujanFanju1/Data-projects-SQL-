@@ -1,0 +1,44 @@
+select * from monthly_sales..zoro_sales_data$
+
+select 
+	order_mt, 
+	sum(cost) as total_monthly_cost, 
+	sum(distinct_items) as total_products_ordered
+from monthly_sales..zoro_sales_data$
+group by order_mt
+order by total_monthly_cost desc
+--The best performing month in terms of cost was Nov 2021.
+--The worst performing month is Dec of 2021.
+
+select 
+	cohort, 
+	sum(orders) as total_orders, 
+	sum(cost) as total_cost
+from monthly_sales..zoro_sales_data$
+group by cohort
+--Only about 12.4% of total cost comes from B2C. 
+--In total, B2B spend rought 7 times more on equipment than B2C.
+
+select sum(cost)
+from monthly_sales..zoro_sales_data$
+
+with total as
+	(select 
+		sum(cost) as subtotal_cost
+	from monthly_sales..zoro_sales_data$)
+
+--(17934915.5294)
+select 
+	customer_industry,
+	sum(orders) as total_orders,
+	avg(orders) as avg_orders,
+	sum(cost) as total_cost,
+	sum(cost)/sum(orders) as avg_cost,
+	(sum(cost)/(select sum(cost) from monthly_sales..zoro_sales_data$))*100 as percent_of_total_spending
+from monthly_sales..zoro_sales_data$
+group by customer_industry
+order by total_cost desc
+--Manufacturing and wholesale (motor vehicle repair) industry spends the most on orders.
+--Activities of households and public administration spend the least.
+--A large proportion is in the unknown for industry (3rd most)- worth doing some investigation as to what this is.
+--Per order, the mining and quarrying industry had the highest avg. spending- this is because this is where the most expensive equipment is probably.
